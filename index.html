@@ -1,0 +1,726 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Modern To-Do App</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background: #f9fafb;
+    color: #333;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  h1, h2, h3 {
+    margin: 0;
+    font-weight: 600;
+    user-select: none;
+  }
+  h1 {
+    font-size: 1.75rem;
+    color: #4f46e5;
+  }
+  button {
+    cursor: pointer;
+    font-family: inherit;
+  }
+  input, button, select, textarea {
+    font-family: inherit;
+  }
+  input, select, textarea {
+    font-size: 1rem;
+  }
+  button:focus, input:focus, textarea:focus {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+  }
+
+  /* Layout */
+  .app-wrapper {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - 72px);
+    overflow: hidden;
+  }
+  
+  header {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 0 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    z-index: 10;
+    user-select: none;
+  }
+
+  /* Sidebar for lists */
+  aside {
+    width: 280px;
+    background: #eef2ff;
+    border-right: 1px solid #e0e7ff;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 16px 16px;
+  }
+  @media (max-width: 768px) {
+    aside {
+      width: 100%;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid #e0e7ff;
+      flex-shrink: 0;
+      order: 1;
+      padding: 16px 16px 12px;
+    }
+    .app-wrapper {
+      flex-direction: column;
+      height: auto;
+    }
+  }
+
+  .list-header {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #4338ca;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .list-header button {
+    background: transparent;
+    border: none;
+    color: #4338ca;
+    font-size: 24px;
+    line-height: 1;
+    padding: 0;
+    user-select: none;
+  }
+  .list-header button:hover, .list-header button:focus {
+    color: #3730a3;
+  }
+
+  ul.list-container {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    flex-grow: 1;
+  }
+  ul.list-container::-webkit-scrollbar {
+    width: 6px;
+  }
+  ul.list-container::-webkit-scrollbar-thumb {
+    background: #a5b4fc;
+    border-radius: 4px;
+  }
+  ul.list-container li {
+    font-size: 1rem;
+    color: #3730a3;
+    margin-bottom: 12px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  ul.list-container li:hover, ul.list-container li:focus {
+    background: #c7d2fe;
+    outline: none;
+  }
+  ul.list-container li.active {
+    background: #4338ca;
+    color: white;
+    font-weight: 700;
+  }
+  ul.list-container li .material-icons {
+    font-size: 18px;
+    color: inherit;
+  }
+
+  /* Add list input */
+  .add-list-wrapper {
+    margin-top: auto;
+    display: flex;
+    gap: 8px;
+  }
+  .add-list-wrapper input {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border-radius: 16px;
+    border: 2px solid #c7d2fe;
+    transition: border-color 0.3s ease;
+  }
+  .add-list-wrapper input:focus {
+    border-color: #4338ca;
+    outline: none;
+  }
+  .add-list-wrapper button {
+    background: #4338ca;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 8px 14px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+  }
+  .add-list-wrapper button:hover, .add-list-wrapper button:focus {
+    background: #3730a3;
+    outline: none;
+  }
+
+  /* Main content for tasks */
+  main {
+    flex-grow: 1;
+    padding: 24px 32px;
+    overflow-y: auto;
+  }
+  @media (max-width: 768px) {
+    main {
+      padding: 16px 20px;
+      order: 2;
+      height: auto;
+    }
+  }
+  
+  .tasks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .tasks-header h2 {
+    font-size: 1.5rem;
+    color: #4338ca;
+    user-select: none;
+  }
+
+  /* Add task form */
+  .add-task-form {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .add-task-form input[type="text"] {
+    flex-grow: 2;
+    padding: 8px 12px;
+    border-radius: 16px;
+    border: 2px solid #c7d2fe;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  .add-task-form input[type="text"]:focus {
+    border-color: #4338ca;
+    outline: none;
+  }
+  .add-task-form input[type="datetime-local"] {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border-radius: 16px;
+    border: 2px solid #c7d2fe;
+    font-size: 1rem;
+  }
+  .add-task-form input[type="datetime-local"]:focus {
+    border-color: #4338ca;
+    outline: none;
+  }
+  .add-task-form button {
+    background: #4338ca;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 10px 18px;
+    font-weight: 600;
+    align-self: stretch;
+    transition: background-color 0.3s ease;
+  }
+  .add-task-form button:hover, .add-task-form button:focus {
+    background: #3730a3;
+    outline: none;
+  }
+
+  /* Task list */
+  .task-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Task item */
+  .task-item {
+    background: white;
+    margin-bottom: 16px;
+    padding: 14px 20px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: box-shadow 0.25s ease;
+  }
+  .task-item:hover {
+    box-shadow: 0 4px 16px rgba(67,54,202,0.25);
+  }
+
+  .task-checkbox {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .task-checkbox input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+  }
+
+  .task-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .task-text {
+    font-size: 1rem;
+    font-weight: 500;
+    user-select: none;
+    word-break: break-word;
+  }
+  .task-text.completed {
+    text-decoration: line-through;
+    color: #8b8b8b;
+    user-select: none;
+  }
+
+  /* Editable input for task text */
+  .task-text-edit {
+    font-size: 1rem;
+    padding: 6px 8px;
+    border-radius: 12px;
+    border: 2px solid #c7d2fe;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .task-text-edit:focus {
+    border-color: #4338ca;
+    outline: none;
+  }
+
+  /* Task date-time */
+  .task-date {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+  .task-date input[type="datetime-local"] {
+    font-size: 0.85rem;
+    padding: 4px 6px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: transparent;
+  }
+  .task-date input[type="datetime-local"]:focus {
+    outline: 2px solid #4338ca;
+  }
+
+  /* Task controls */
+  .task-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .task-actions button {
+    background: transparent;
+    border: none;
+    color: #4338ca;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+  }
+  .task-actions button:hover, .task-actions button:focus {
+    background: #4338ca;
+    color: white;
+    outline: none;
+  }
+  .task-actions button .material-icons {
+    font-size: 20px;
+  }
+
+</style>
+</head>
+<body>
+<header><h1>My To-Do App</h1></header>
+<div class="app-wrapper">
+  <aside aria-label="Task lists">
+    <div class="list-header">
+      Lists
+      <button id="btn-add-list" aria-label="Add new list" title="Add new list"><span class="material-icons">add</span></button>
+    </div>
+    <ul class="list-container" id="lists" tabindex="0" role="list" aria-live="polite" aria-relevant="additions removals">
+      <!-- Lists injected here -->
+    </ul>
+    <div class="add-list-wrapper" id="new-list-wrapper" style="display:none;">
+      <input type="text" id="new-list-name" aria-label="New list name" placeholder="New list name" />
+      <button id="new-list-add-btn" aria-label="Add list">Add</button>
+      <button id="new-list-cancel-btn" aria-label="Cancel adding list"><span class="material-icons">close</span></button>
+    </div>
+  </aside>
+  <main aria-live="polite" aria-atomic="true">
+    <div class="tasks-header">
+      <h2 id="current-list-name">Select or add a list</h2>
+    </div>
+    <form class="add-task-form" id="add-task-form" style="display:none;" aria-label="Add new task">
+      <input type="text" id="task-input" placeholder="New task name" aria-required="true" aria-label="Task name" />
+      <input type="datetime-local" id="task-datetime" aria-label="Task date and time" />
+      <button type="submit" aria-label="Add task">Add</button>
+    </form>
+    <ul class="task-list" id="tasks" role="list" aria-live="polite" aria-relevant="additions removals">
+      <!-- Tasks injected here -->
+    </ul>
+  </main>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // DOM elements
+  const listsEl = document.getElementById('lists');
+  const tasksEl = document.getElementById('tasks');
+  const currentListNameEl = document.getElementById('current-list-name');
+  const addTaskForm = document.getElementById('add-task-form');
+  const taskInput = document.getElementById('task-input');
+  const taskDatetimeInput = document.getElementById('task-datetime');
+  const btnAddList = document.getElementById('btn-add-list');
+  const newListWrapper = document.getElementById('new-list-wrapper');
+  const newListNameInput = document.getElementById('new-list-name');
+  const newListAddBtn = document.getElementById('new-list-add-btn');
+  const newListCancelBtn = document.getElementById('new-list-cancel-btn');
+
+  // Data model: lists array, each has id, name, tasks array
+  let lists = [];
+  let currentListId = null;
+
+  // Utility to generate unique ID
+  function genId() {
+    return '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  // Render lists sidebar
+  function renderLists() {
+    listsEl.innerHTML = '';
+    if (lists.length === 0) {
+      const emptyMsg = document.createElement('li');
+      emptyMsg.textContent = 'No lists yet. Add a list.';
+      emptyMsg.style.color = '#777';
+      emptyMsg.style.fontStyle = 'italic';
+      emptyMsg.tabIndex = -1;
+      listsEl.appendChild(emptyMsg);
+      currentListNameEl.textContent = 'Select or add a list';
+      addTaskForm.style.display = 'none';
+      tasksEl.innerHTML = '';
+      return;
+    }
+    lists.forEach(list => {
+      const li = document.createElement('li');
+      li.textContent = list.name;
+      li.tabIndex = 0;
+      li.setAttribute('role', 'listitem');
+      li.dataset.listId = list.id;
+      if (list.id === currentListId) {
+        li.classList.add('active');
+      }
+      li.addEventListener('click', () => selectList(list.id));
+      li.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectList(list.id);
+        }
+      });
+      listsEl.appendChild(li);
+    });
+  }
+
+  // Select list by id
+  function selectList(id) {
+    const list = lists.find(l => l.id === id);
+    if (!list) return;
+    currentListId = id;
+    currentListNameEl.textContent = list.name;
+    addTaskForm.style.display = 'flex';
+    renderLists();
+    renderTasks();
+  }
+
+  // Render tasks for current list
+  function renderTasks() {
+    tasksEl.innerHTML = '';
+    const list = lists.find(l => l.id === currentListId);
+    if (!list || list.tasks.length === 0) {
+      const emptyMsg = document.createElement('li');
+      emptyMsg.textContent = 'No tasks yet. Add a new task.';
+      emptyMsg.style.color = '#777';
+      emptyMsg.style.fontStyle = 'italic';
+      emptyMsg.tabIndex = -1;
+      tasksEl.appendChild(emptyMsg);
+      return;
+    }
+    list.tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.className = 'task-item';
+      li.dataset.taskId = task.id;
+
+      // Checkbox for completed
+      const checkboxWrapper = document.createElement('label');
+      checkboxWrapper.className = 'task-checkbox';
+      checkboxWrapper.setAttribute('aria-label', 'Mark task as completed');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = task.completed;
+      checkbox.setAttribute('aria-checked', task.completed);
+      checkbox.tabIndex = 0;
+      checkbox.addEventListener('change', e => {
+        task.completed = e.target.checked;
+        renderTasks();
+      });
+      checkboxWrapper.appendChild(checkbox);
+
+      li.appendChild(checkboxWrapper);
+
+      // Content container
+      const content = document.createElement('div');
+      content.className = 'task-content';
+
+      // Task text display or input (editable)
+      if (task.editing) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'task-text-edit';
+        input.value = task.name;
+        input.setAttribute('aria-label', 'Edit task name');
+        input.addEventListener('keydown', e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            finishEdit(task, input.value);
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            cancelEdit(task);
+          }
+        });
+        input.addEventListener('blur', () => finishEdit(task, input.value));
+        content.appendChild(input);
+        setTimeout(() => input.focus(), 10);
+      } else {
+        const span = document.createElement('span');
+        span.className = 'task-text' + (task.completed ? ' completed' : '');
+        span.textContent = task.name;
+        span.tabIndex = 0;
+        span.setAttribute('role', 'textbox');
+        span.setAttribute('aria-readonly', 'true');
+        span.setAttribute('aria-label', 'Task name');
+        content.appendChild(span);
+      }
+
+      // Show datetime info below task text
+      const datetimeDiv = document.createElement('div');
+      datetimeDiv.className = 'task-date';
+
+      if (task.editing) {
+        const dtInput = document.createElement('input');
+        dtInput.type = 'datetime-local';
+        dtInput.value = task.datetime || '';
+        dtInput.setAttribute('aria-label', 'Set task date and time');
+        dtInput.addEventListener('change', e => {
+          task.datetime = e.target.value;
+        });
+        dtInput.addEventListener('blur', () => {
+          // Optional: save date change on blur
+          renderTasks();
+        });
+        datetimeDiv.appendChild(dtInput);
+      } else {
+        if (task.datetime) {
+          const dt = new Date(task.datetime);
+          if (!isNaN(dt)) {
+            // Format date-time in user local format with short date and time
+            const dtFormatted = dt.toLocaleString(undefined, {
+              year: 'numeric', month: 'short', day: 'numeric',
+              hour: '2-digit', minute: '2-digit',
+            });
+            datetimeDiv.textContent = dtFormatted;
+          }
+        } else {
+          datetimeDiv.textContent = '';
+        }
+      }
+      content.appendChild(datetimeDiv);
+      li.appendChild(content);
+
+      // Action buttons: edit and delete
+      const actions = document.createElement('div');
+      actions.className = 'task-actions';
+
+      // Edit button toggles edit mode
+      const btnEdit = document.createElement('button');
+      btnEdit.setAttribute('aria-label', 'Edit task');
+      btnEdit.title = 'Edit task';
+      btnEdit.innerHTML = '<span class="material-icons">edit</span>';
+      btnEdit.addEventListener('click', () => {
+        toggleEdit(task);
+      });
+
+      // Delete button removes the task
+      const btnDelete = document.createElement('button');
+      btnDelete.setAttribute('aria-label', 'Delete task');
+      btnDelete.title = 'Delete task';
+      btnDelete.innerHTML = '<span class="material-icons">delete</span>';
+      btnDelete.addEventListener('click', () => {
+        deleteTask(task.id);
+      });
+
+      actions.appendChild(btnEdit);
+      actions.appendChild(btnDelete);
+      li.appendChild(actions);
+
+      tasksEl.appendChild(li);
+    });
+  }
+
+  // Finish edit mode for a task
+  function finishEdit(task, newName) {
+    const trimmed = newName.trim();
+    if (trimmed.length === 0) {
+      // If empty, delete the task
+      deleteTask(task.id);
+    } else {
+      task.name = trimmed;
+      task.editing = false;
+      renderTasks();
+    }
+  }
+
+  // Cancel edit without changes
+  function cancelEdit(task) {
+    task.editing = false;
+    renderTasks();
+  }
+
+  // Toggle editing state for a task
+  function toggleEdit(task) {
+    // Turn off edit mode on all tasks first
+    lists.forEach(list => {
+      list.tasks.forEach(t => {
+        if (t !== task) t.editing = false;
+      });
+    });
+    task.editing = !task.editing;
+    renderTasks();
+  }
+
+  // Delete task by id
+  function deleteTask(taskId) {
+    const list = lists.find(l => l.id === currentListId);
+    if (!list) return;
+    list.tasks = list.tasks.filter(t => t.id !== taskId);
+    renderTasks();
+  }
+
+  // Add new task handler
+  addTaskForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const text = taskInput.value.trim();
+    if (!text) return;
+    const list = lists.find(l => l.id === currentListId);
+    if (!list) return;
+    const datetimeVal = taskDatetimeInput.value;
+    list.tasks.push({
+      id: genId(),
+      name: text,
+      completed: false,
+      datetime: datetimeVal || null,
+      editing: false
+    });
+    taskInput.value = '';
+    taskDatetimeInput.value = '';
+    renderTasks();
+  });
+
+  // Add new list controls
+  btnAddList.addEventListener('click', () => {
+    newListWrapper.style.display = 'flex';
+    newListNameInput.value = '';
+    newListNameInput.focus();
+    btnAddList.disabled = true;
+  });
+  newListAddBtn.addEventListener('click', () => {
+    const nameVal = newListNameInput.value.trim();
+    if (!nameVal) {
+      newListNameInput.focus();
+      return;
+    }
+    const newList = {
+      id: genId(),
+      name: nameVal,
+      tasks: []
+    };
+    lists.push(newList);
+    currentListId = newList.id;
+    newListWrapper.style.display = 'none';
+    btnAddList.disabled = false;
+    renderLists();
+    renderTasks();
+    currentListNameEl.textContent = newList.name;
+  });
+  newListCancelBtn.addEventListener('click', () => {
+    newListWrapper.style.display = 'none';
+    btnAddList.disabled = false;
+  });
+  newListNameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      newListAddBtn.click();
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      newListCancelBtn.click();
+    }
+  });
+
+  // Initialize with sample list
+  function init() {
+    lists = [{
+      id: genId(),
+      name: 'Default List',
+      tasks: []
+    }];
+    currentListId = lists[0].id;
+    renderLists();
+    renderTasks();
+    currentListNameEl.textContent = lists[0].name;
+    addTaskForm.style.display = 'flex';
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
+
+```
